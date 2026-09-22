@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Model cache (downloaded weights live in ~/.cache/huggingface, not here, but
+# just in case a local cache dir is used)
+.cache/

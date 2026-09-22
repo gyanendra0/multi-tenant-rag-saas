@@ -1,0 +1,17 @@
+# rag-service dependencies (Phase 7).
+# Install into a virtualenv:  pip install -r requirements.txt
+#
+# Versions are pinned to majors that are known to work together on Python 3.12.
+
+fastapi==0.115.*
+uvicorn[standard]==0.30.*
+pydantic==2.*
+pydantic-settings==2.*
+
+# Embeddings (local, offline). torch is pulled in automatically as a dependency;
+# pip selects the correct CPU build for your platform.
+sentence-transformers==3.*
+
+# LLM (Phase 8) — OpenAI-compatible chat client (works with Groq, Together,
+# OpenRouter, Fireworks, DeepSeek, local Ollama, etc.).
+openai==1.*

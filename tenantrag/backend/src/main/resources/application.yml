@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: tenant-rag-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rag_saas
+    username: rag_app
+    password: "1234"
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+  servlet:
+    multipart:
+      # Reject uploads larger than these limits before they hit our code.
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+server:
+  port: 8080
+
+# Application-specific settings.
+app:
+  jwt:
+    # HMAC signing secret. MUST be at least 32 bytes for HS256.
+    # Override in real environments via the APP_JWT_SECRET env var.
+    secret: ${APP_JWT_SECRET:change-me-dev-secret-please-override-32bytes-min!}
+    # Access-token lifetime in seconds (default 15 minutes).
+    access-token-ttl-seconds: ${APP_JWT_ACCESS_TTL:900}
+    # Refresh-token lifetime in seconds (default 30 days).
+    refresh-token-ttl-seconds: ${APP_JWT_REFRESH_TTL:2592000}
+    # Token issuer claim.
+    issuer: tenant-rag-backend
+
+  # Object storage (MinIO in dev, S3 in prod). MinIO speaks the S3 API, so the
+  # same client works against both — only endpoint/credentials change.
+  storage:
+    endpoint: ${APP_STORAGE_ENDPOINT:http://localhost:9000}
+    region: ${APP_STORAGE_REGION:us-east-1}
+    access-key: ${APP_STORAGE_ACCESS_KEY:minioadmin}
+    secret-key: ${APP_STORAGE_SECRET_KEY:minioadmin}
+    bucket: ${APP_STORAGE_BUCKET:rag-documents}
+    # MinIO needs path-style access (http://host:9000/bucket/key). Real S3 uses
+    # virtual-host style; set this to false there.
+    path-style-access: ${APP_STORAGE_PATH_STYLE:true}
+    # Reject uploads above this size (defense in depth with multipart limits).
+    max-file-size-bytes: ${APP_STORAGE_MAX_FILE_SIZE:26214400} # 25 MiB
+
+  # Async ingestion — the backend publishes a job here after a successful upload;
+  # the Python worker consumes it and runs parse → chunk → embed → store.
+  ingest:
+    queue: ${APP_INGEST_QUEUE:documents.ingest}
+
+  # RAG chat (Phase 8) — retrieval + LLM answer settings.
+  rag:
+    # Internal embeddings/LLM service (FastAPI). Same one the worker uses.
+    service-url: ${APP_RAG_SERVICE_URL:http://localhost:8100}
+    # How many top chunks to retrieve as context for a question.
+    top-k: ${APP_RAG_TOP_K:5}

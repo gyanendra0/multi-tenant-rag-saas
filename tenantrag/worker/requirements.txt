@@ -1,0 +1,31 @@
+# worker dependencies (Phase 7, step 3).
+# Install into a virtualenv:  pip install -r requirements.txt
+
+# RabbitMQ consumer (async).
+aio-pika==9.*
+
+# Redis client (job status).
+redis==5.*
+
+# PostgreSQL driver (async) + pgvector adapter for the halfvec/vector type.
+psycopg[binary]==3.2.*
+pgvector==0.3.*
+
+# Object storage (MinIO/S3).
+boto3==1.35.*
+
+# HTTP client to call the rag-service /embed endpoint.
+httpx==0.27.*
+
+# Parsing document types.
+pypdf==5.*
+python-docx==1.1.*
+beautifulsoup4==4.12.*
+markdown==3.7.*
+
+# Token counting for chunk sizing.
+tiktoken==0.8.*
+
+# Settings.
+pydantic==2.*
+pydantic-settings==2.*

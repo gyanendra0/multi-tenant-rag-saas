@@ -1,0 +1,7 @@
+[flyway]
+locations = ["filesystem:src/main/resources/db/migration"]
+
+[environments.default]
+url = "jdbc:postgresql://localhost:5432/rag_saas"
+user = "rag_app"
+password = "1234"

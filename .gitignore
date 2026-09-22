@@ -1,0 +1,71 @@
+# ==========================================================================
+# .gitignore — Multi Tenant RAG SaaS
+# Keeps secrets, build outputs, dependencies, and OS/editor cruft out of git.
+# ==========================================================================
+
+# ---- Secrets / environment (NEVER commit) --------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ---- Java / Maven (backend) ----------------------------------------------
+tenantrag/backend/target/
+**/target/
+*.class
+*.jar
+*.war
+!**/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.jar
+
+# ---- Python (rag-service, worker) ----------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Hugging Face / model caches if ever placed in-repo
+.cache/
+models/
+
+# ---- Node / Angular (web) ------------------------------------------------
+node_modules/
+tenantrag/web/dist/
+tenantrag/web/.angular/
+npm-debug.log*
+yarn-error.log*
+
+# ---- Docker ---------------------------------------------------------------
+# (compose files ARE committed; only local overrides/volumes are ignored)
+docker-compose.override.yml
+
+# ---- OS / editor ----------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+*.iml
+# Keep shared VS Code settings out by default; un-ignore if you want to share
+.vscode/*
+!.vscode/extensions.json
+
+# ---- Logs / temp ----------------------------------------------------------
+*.log
+logs/
+tmp/
+*.tmp
+
+# ---- Meta / dev-only (not part of the shipped project) --------------------
+# Scaffolding, planning notes, personal journals, and the upload how-to.
+create_structure.sh
+Multi Tenant RAG SaaS — Project Handoff Summary.md
+rag-saas-readme.md
+tenantrag/backend/learning.md
+tenantrag/docs/github-upload.md

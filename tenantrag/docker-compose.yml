@@ -1,0 +1,103 @@
+# docker-compose.yml — local infrastructure for the Multi Tenant RAG SaaS.
+#
+# Runs the backing services that don't already exist natively on this machine:
+#   - MinIO    (S3-compatible object storage) — Phase 6
+#   - RabbitMQ (message queue for async ingestion) — Phase 7
+#   - Redis    (job status / cache) — Phase 7
+#
+# PostgreSQL currently runs natively on your macOS machine, so it is
+# intentionally NOT included here.
+#
+# Usage (from the `tenantrag/` folder):
+#   docker compose up -d          # start everything in the background
+#   docker compose ps             # see status
+#   docker compose logs -f minio  # follow one service's logs
+#   docker compose down           # stop (named-volume data is kept)
+#   docker compose down -v        # stop AND delete stored data (fresh start)
+#
+# Endpoints once up:
+#   - MinIO S3 API   : http://localhost:9000
+#   - MinIO console  : http://localhost:9001   (minioadmin / minioadmin)
+#   - RabbitMQ AMQP  : amqp://localhost:5672    (guest / guest)
+#   - RabbitMQ admin : http://localhost:15672   (guest / guest)
+#   - Redis          : redis://localhost:6379
+
+services:
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: rag-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      # MinIO ships a tiny `mc` binary in the server image; use it to self-check.
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # One-shot helper that waits for MinIO, then creates the bucket the app uses.
+  # It exits after doing its job (that is expected — `docker compose ps` will
+  # show it as "Exited (0)").
+  minio-setup:
+    image: quay.io/minio/mc:latest
+    container_name: rag-minio-setup
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do
+        echo 'Waiting for MinIO to be ready...'; sleep 2;
+      done &&
+      mc mb --ignore-existing local/rag-documents &&
+      echo 'Bucket rag-documents is ready.'
+      "
+
+  # RabbitMQ — message broker for async document ingestion (Phase 7).
+  # The backend publishes 'documents.ingest' messages; the Python worker consumes
+  # them. The '-management' image includes a web admin UI on :15672.
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rag-rabbitmq
+    ports:
+      - "5672:5672"     # AMQP protocol (apps connect here)
+      - "15672:15672"   # Management web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Redis — job status + cache (Phase 7). The worker writes ingestion progress
+  # to job:{documentId} keys the UI can poll.
+  redis:
+    image: redis:7-alpine
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  minio-data:
+  rabbitmq-data:
+  redis-data:
