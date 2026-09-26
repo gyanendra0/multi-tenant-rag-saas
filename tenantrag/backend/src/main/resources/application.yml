@@ -48,6 +48,11 @@ app:
     # Token issuer claim.
     issuer: tenant-rag-backend
 
+  auth:
+    # Refresh-token cookie `Secure` flag. false for local http dev; MUST be true
+    # in production (https) so the cookie is never sent over plain http.
+    refresh-cookie-secure: ${APP_AUTH_COOKIE_SECURE:false}
+
   # Object storage (MinIO in dev, S3 in prod). MinIO speaks the S3 API, so the
   # same client works against both — only endpoint/credentials change.
   storage:

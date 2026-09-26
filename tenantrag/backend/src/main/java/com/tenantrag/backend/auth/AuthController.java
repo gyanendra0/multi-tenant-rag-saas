@@ -2,25 +2,49 @@ package com.tenantrag.backend.auth;
 
 import com.tenantrag.backend.auth.dto.AuthResponse;
 import com.tenantrag.backend.auth.dto.LoginRequest;
-import com.tenantrag.backend.auth.dto.RefreshRequest;
 import com.tenantrag.backend.auth.dto.RegisterRequest;
 import com.tenantrag.backend.auth.dto.UserResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
+
+/**
+ * Auth endpoints.
+ *
+ * <p>The <b>refresh token</b> travels only in an httpOnly cookie (never in the
+ * JSON body), so JavaScript — and therefore XSS — can't read it. The cookie is
+ * scoped to {@code /api/auth} and {@code SameSite=Strict}, so the browser sends
+ * it only to refresh/logout and never on cross-site requests. The short-lived
+ * access token is still returned in the body and kept in memory by the client.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthService authService;
+    static final String REFRESH_COOKIE = "refresh_token";
+    private static final String COOKIE_PATH = "/api/auth";
 
-    public AuthController(AuthService authService) {
+    private final AuthService authService;
+    private final boolean cookieSecure;
+    private final long refreshTtlSeconds;
+
+    public AuthController(
+            AuthService authService,
+            @Value("${app.auth.refresh-cookie-secure:false}") boolean cookieSecure,
+            @Value("${app.jwt.refresh-token-ttl-seconds}") long refreshTtlSeconds) {
         this.authService = authService;
+        this.cookieSecure = cookieSecure;
+        this.refreshTtlSeconds = refreshTtlSeconds;
     }
 
     /**
@@ -43,28 +67,57 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody LoginRequest request) {
 
-        return ResponseEntity.ok(authService.login(request));
+        return withRefreshCookie(authService.login(request));
     }
 
     /**
-     * Phase 3.16 — Refresh. Exchanges a valid refresh token for a new access
-     * token and rotates the refresh token.
+     * Phase 3.16 — Refresh. Reads the refresh token from the httpOnly cookie,
+     * rotates it (new cookie set), and returns a new access token.
      */
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(
-            @Valid @RequestBody RefreshRequest request) {
+            @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken) {
 
-        return ResponseEntity.ok(authService.refresh(request.refreshToken()));
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new InvalidCredentialsException("Missing refresh token");
+        }
+        return withRefreshCookie(authService.refresh(refreshToken));
     }
 
     /**
-     * Phase 3.16 — Logout. Revokes the presented refresh token.
+     * Phase 3.16 — Logout. Revokes the cookie's refresh token (if any) and
+     * clears the cookie. Idempotent: always 204.
      */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @Valid @RequestBody RefreshRequest request) {
+            @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken) {
 
-        authService.logout(request.refreshToken());
-        return ResponseEntity.noContent().build();
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            authService.logout(refreshToken);
+        }
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie("", Duration.ZERO).toString())
+                .build();
+    }
+
+    // -- helpers -------------------------------------------------------------
+
+    /** Move the refresh token from the body into an httpOnly cookie. */
+    private ResponseEntity<AuthResponse> withRefreshCookie(AuthResponse auth) {
+        ResponseCookie cookie = refreshCookie(
+                auth.refreshToken(), Duration.ofSeconds(refreshTtlSeconds));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(auth.withoutRefreshToken());
+    }
+
+    private ResponseCookie refreshCookie(String value, Duration maxAge) {
+        return ResponseCookie.from(REFRESH_COOKIE, value)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path(COOKIE_PATH)
+                .maxAge(maxAge)
+                .build();
     }
 }

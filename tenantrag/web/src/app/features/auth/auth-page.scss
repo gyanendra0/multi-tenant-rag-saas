@@ -1,0 +1,30 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--mat-sys-surface-container, #f4f4f6);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+button[type='submit'] {
+  margin-top: 8px;
+}
+
+.error {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+}

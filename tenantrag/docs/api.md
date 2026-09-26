@@ -26,22 +26,26 @@ Creates a new tenant and its first user (owner).
   "tenantSlug": "acme"
 }
 ```
-**201** → `{ "accessToken", "refreshToken", "user": { ... } }`
+**201** → user profile `{ "userId", "email", "fullName", "tenantId", "tenantName", "tenantSlug", "role" }` (no tokens — log in next)
 
 ### POST `/api/auth/login`
 ```json
 { "email": "me@acme.com", "password": "Passw0rd!" }
 ```
-**200** → `{ "accessToken", "refreshToken", "user": { ... } }`
+**200** → `{ "accessToken", "tokenType", "expiresInSeconds", "user": { ... } }`
+plus a `Set-Cookie: refresh_token=…; HttpOnly; SameSite=Strict; Path=/api/auth` header.
+The refresh token is **never** in the JSON body (`refreshToken` is `null`).
 
 ### POST `/api/auth/refresh`
-```json
-{ "refreshToken": "<token>" }
-```
-**200** → new `{ "accessToken", "refreshToken" }`
+No body — the browser sends the `refresh_token` cookie automatically.
+**200** → new access token (same shape as login) and a **rotated** cookie.
+**401** if the cookie is missing, expired, or revoked.
 
 ### POST `/api/auth/logout`
-Invalidates the refresh token. **204**
+No body. Revokes the cookie's refresh token and clears the cookie. **204** (idempotent).
+
+> Testing with curl: store and resend the cookie with `-c jar.txt` / `-b jar.txt`,
+> e.g. `curl -c jar.txt -X POST .../login ...` then `curl -b jar.txt -c jar.txt -X POST .../refresh`.
 
 ---
 
