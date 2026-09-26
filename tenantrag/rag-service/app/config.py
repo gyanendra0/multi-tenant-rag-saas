@@ -46,7 +46,10 @@ class Settings(BaseSettings):
     llm_model: str = "openai/gpt-oss-120b"
     # Comma-separated fallback models tried in order if the primary fails
     # (rate limit, model unavailable, transient error). First success wins.
-    llm_fallback_models: str = "llama-3.3-70b-versatile"
+    # NOTE: Groq rotates/deprecates model ids — if you get a 404 "model does not
+    # exist", check /v1/models and update this. `llama-3.1-8b-instant` is small,
+    # fast, and widely available on Groq (good rate-limit-friendly fallback).
+    llm_fallback_models: str = "llama-3.1-8b-instant"
     # API key for the provider. REQUIRED for hosted providers (set LLM_API_KEY).
     # Leave blank for a keyless local Ollama.
     llm_api_key: str = ""
@@ -55,6 +58,9 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 1024
     # HTTP timeout (seconds) for a completion.
     llm_timeout_seconds: float = 60.0
+    # How many times the OpenAI client auto-retries a failed call (notably 429
+    # rate limits) with exponential backoff before giving up on that model.
+    llm_max_retries: int = 6
 
     @property
     def llm_models(self) -> list[str]:
