@@ -64,12 +64,18 @@ public class RagServiceClient {
      */
     @SuppressWarnings("unchecked")
     public String generate(String system, String prompt) {
-        Map<String, Object> body = restClient.post()
-                .uri("/generate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("system", system, "prompt", prompt))
-                .retrieve()
-                .body(Map.class);
+        Map<String, Object> body;
+        try {
+            body = restClient.post()
+                    .uri("/generate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("system", system, "prompt", prompt))
+                    .retrieve()
+                    .body(Map.class);
+        } catch (org.springframework.web.client.RestClientException e) {
+            // 5xx/429 from rag-service or connection refused → 503 to the client.
+            throw new RagServiceException("rag-service /generate failed: " + e.getMessage(), e);
+        }
 
         if (body == null || !(body.get("answer") instanceof String answer)) {
             throw new RagServiceException("rag-service returned no answer");

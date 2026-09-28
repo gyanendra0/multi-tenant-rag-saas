@@ -2,7 +2,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -15,40 +14,37 @@ import { AuthService } from '../../core/auth/auth.service';
   standalone: true,
   imports: [
     ReactiveFormsModule, RouterLink,
-    MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule,
+    MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule,
   ],
   styleUrl: './auth-page.scss',
   template: `
     <div class="auth-page">
-      <mat-card class="auth-card">
+      <div class="auth-card">
         @if (loading()) { <mat-progress-bar mode="indeterminate" /> }
-        <mat-card-header>
-          <mat-card-title>Sign in</mat-card-title>
-          <mat-card-subtitle>Multi-Tenant RAG</mat-card-subtitle>
-        </mat-card-header>
 
-        <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="submit()">
-            <mat-form-field appearance="outline">
-              <mat-label>Email</mat-label>
-              <input matInput type="email" formControlName="email" autocomplete="email" />
-            </mat-form-field>
+        <div class="auth-brand"><span class="dot"></span>TenantRAG</div>
+        <h1>Welcome back</h1>
+        <p class="subtitle">Sign in to chat with your organization's documents.</p>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Password</mat-label>
-              <input matInput type="password" formControlName="password" autocomplete="current-password" />
-            </mat-form-field>
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+          </mat-form-field>
 
-            @if (error()) { <p class="error">{{ error() }}</p> }
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" autocomplete="current-password" />
+          </mat-form-field>
 
-            <button mat-flat-button type="submit" [disabled]="form.invalid || loading()">Sign in</button>
-          </form>
-        </mat-card-content>
+          @if (error()) { <p class="error">{{ error() }}</p> }
 
-        <mat-card-actions>
-          <a mat-button routerLink="/register">Create an organization</a>
-        </mat-card-actions>
-      </mat-card>
+          <button mat-flat-button color="primary" type="submit"
+                  [disabled]="form.invalid || loading()">Sign in</button>
+        </form>
+
+        <p class="alt">New here? <a routerLink="/register">Create an organization</a></p>
+      </div>
     </div>
   `,
 })

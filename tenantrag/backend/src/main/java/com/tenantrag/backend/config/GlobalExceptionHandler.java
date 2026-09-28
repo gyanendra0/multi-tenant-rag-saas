@@ -2,6 +2,8 @@ package com.tenantrag.backend.config;
 
 import com.tenantrag.backend.auth.AuthConflictException;
 import com.tenantrag.backend.auth.InvalidCredentialsException;
+import com.tenantrag.backend.chat.ConversationNotFoundException;
+import com.tenantrag.backend.rag.RagServiceException;
 import com.tenantrag.backend.document.DocumentNotFoundException;
 import com.tenantrag.backend.document.InvalidUploadException;
 import com.tenantrag.backend.document.StorageReadException;
@@ -51,6 +53,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleDocumentNotFound(
             DocumentNotFoundException ex) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(ConversationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleConversationNotFound(
+            ConversationNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), null);
+    }
+
+    /** LLM/embeddings upstream down or rate-limited → 503 so the UI can say "try again". */
+    @ExceptionHandler(RagServiceException.class)
+    public ResponseEntity<Map<String, Object>> handleRagService(RagServiceException ex) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE,
+                "The AI service is busy or unavailable. Please try again shortly.", null);
     }
 
     @ExceptionHandler({InvalidUploadException.class, StorageReadException.class})

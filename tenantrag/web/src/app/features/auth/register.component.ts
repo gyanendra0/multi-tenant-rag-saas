@@ -2,7 +2,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -18,60 +17,57 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   standalone: true,
   imports: [
     ReactiveFormsModule, RouterLink,
-    MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule,
+    MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressBarModule,
   ],
   styleUrl: './auth-page.scss',
   template: `
     <div class="auth-page">
-      <mat-card class="auth-card">
+      <div class="auth-card">
         @if (loading()) { <mat-progress-bar mode="indeterminate" /> }
-        <mat-card-header>
-          <mat-card-title>Create your organization</mat-card-title>
-          <mat-card-subtitle>You'll be its owner</mat-card-subtitle>
-        </mat-card-header>
 
-        <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="submit()">
-            <mat-form-field appearance="outline">
-              <mat-label>Organization name</mat-label>
-              <input matInput formControlName="tenantName" (input)="suggestSlug()" />
-            </mat-form-field>
+        <div class="auth-brand"><span class="dot"></span>TenantRAG</div>
+        <h1>Create your organization</h1>
+        <p class="subtitle">You'll be its owner. Everything you upload stays private to it.</p>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Organization slug</mat-label>
-              <input matInput formControlName="tenantSlug" (input)="slugTouched = true" />
-              <mat-hint>lowercase letters, numbers, dashes — e.g. acme-corp</mat-hint>
-              @if (form.controls.tenantSlug.hasError('pattern')) {
-                <mat-error>Only lowercase letters, numbers and single dashes.</mat-error>
-              }
-            </mat-form-field>
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <mat-form-field appearance="outline">
+            <mat-label>Organization name</mat-label>
+            <input matInput formControlName="tenantName" (input)="suggestSlug()" />
+          </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Your full name</mat-label>
-              <input matInput formControlName="fullName" autocomplete="name" />
-            </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Organization slug</mat-label>
+            <input matInput formControlName="tenantSlug" (input)="slugTouched = true" />
+            <mat-hint>lowercase letters, numbers, dashes — e.g. acme-corp</mat-hint>
+            @if (form.controls.tenantSlug.hasError('pattern')) {
+              <mat-error>Only lowercase letters, numbers and single dashes.</mat-error>
+            }
+          </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Email</mat-label>
-              <input matInput type="email" formControlName="email" autocomplete="email" />
-            </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Your full name</mat-label>
+            <input matInput formControlName="fullName" autocomplete="name" />
+          </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Password</mat-label>
-              <input matInput type="password" formControlName="password" autocomplete="new-password" />
-              <mat-hint>At least 8 characters</mat-hint>
-            </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+          </mat-form-field>
 
-            @if (error()) { <p class="error">{{ error() }}</p> }
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" autocomplete="new-password" />
+            <mat-hint>At least 8 characters</mat-hint>
+          </mat-form-field>
 
-            <button mat-flat-button type="submit" [disabled]="form.invalid || loading()">Create organization</button>
-          </form>
-        </mat-card-content>
+          @if (error()) { <p class="error">{{ error() }}</p> }
 
-        <mat-card-actions>
-          <a mat-button routerLink="/login">I already have an account</a>
-        </mat-card-actions>
-      </mat-card>
+          <button mat-flat-button color="primary" type="submit"
+                  [disabled]="form.invalid || loading()">Create organization</button>
+        </form>
+
+        <p class="alt">Already have an account? <a routerLink="/login">Sign in</a></p>
+      </div>
     </div>
   `,
 })

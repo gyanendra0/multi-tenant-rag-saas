@@ -116,3 +116,23 @@ Answers a question using **only** the tenant's documents, with citations.
 
 If nothing relevant is found, the model is instructed to say it doesn't know
 rather than invent an answer.
+
+Errors: **404** if `conversationId` isn't one of *your* conversations;
+**503** if the LLM service is unavailable or rate-limited (retry later).
+
+## Conversations (chat history)
+
+History is private to the **user** (not just the tenant): RLS scopes to the
+tenant and every query also filters `user_id = <JWT sub>`.
+
+### GET `/api/conversations?limit=50&offset=0`
+Your conversations, most recently active first →
+`[{ "id", "title", "createdAt", "updatedAt" }]` (limit clamped to 1–100).
+
+### GET `/api/conversations/{id}/messages`
+Chronological turns →
+`[{ "id", "role": "user|assistant", "content", "citations": [...], "createdAt" }]`.
+**404** if not yours.
+
+### DELETE `/api/conversations/{id}`
+**204**; messages are removed by cascade. **404** if not yours.

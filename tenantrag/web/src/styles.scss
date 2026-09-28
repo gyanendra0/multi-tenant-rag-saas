@@ -1,75 +1,53 @@
 /* ---------------------------------------------------------------------------
    Global theme — warm, low-contrast palette inspired by Claude's chat UI.
    Design tokens live here so components never hardcode colours.
-
-   CSS-only variant. Because there is no Sass here we cannot call
-   `mat.theme()`, so angular.json must ALSO load a prebuilt Material theme
-   BEFORE this file:
-
-     "styles": [
-       "@angular/material/prebuilt-themes/magenta-violet.css",
-       "src/styles.css"
-     ]
-
-   We then override the Material 3 system tokens (--mat-sys-*) below so
-   Material components adopt our warm palette.
 --------------------------------------------------------------------------- */
+@use '@angular/material' as mat;
 
-html { color-scheme: light; }
+html {
+  color-scheme: light;
+
+  /* Material 3 system palette (Angular Material reads these). */
+  @include mat.theme((
+    color: (primary: mat.$orange-palette, tertiary: mat.$orange-palette),
+    typography: Inter,
+    density: 0,
+  ));
+}
 
 :root {
   /* Surfaces: warm paper, not grey. */
-  --bg:             #f0eee6;  /* app background / sidebar */
-  --surface:        #faf9f5;  /* cards, main chat canvas */
-  --surface-sunken: #e8e6dc;  /* hover / subtle fills */
-  --border:         #e0ddd2;
+  --bg:            #f0eee6;  /* app background / sidebar */
+  --surface:       #faf9f5;  /* cards, main chat canvas */
+  --surface-sunken:#e8e6dc;  /* hover / subtle fills */
+  --border:        #e0ddd2;
 
   /* Text */
-  --text:           #26241f;
-  --text-muted:     #6b675d;
+  --text:          #26241f;
+  --text-muted:    #6b675d;
 
   /* Accent — Claude's terracotta */
-  --accent:         #c96442;
-  --accent-hover:   #b4573a;
-  --accent-soft:    #f3e5df;
-  --on-accent:      #ffffff;
+  --accent:        #c96442;
+  --accent-hover:  #b4573a;
+  --accent-soft:   #f3e5df;
+  --on-accent:     #ffffff;
 
   /* Status */
-  --ok:             #3f7d58;
-  --ok-soft:        #e4f0e8;
-  --warn:           #8a6d1f;
-  --warn-soft:      #f7efd8;
-  --err:            #b3402f;
-  --err-soft:       #f8e4e0;
-  --info:           #3f6a99;
-  --info-soft:      #e3ecf6;
+  --ok:            #3f7d58;
+  --ok-soft:       #e4f0e8;
+  --warn:          #8a6d1f;
+  --warn-soft:     #f7efd8;
+  --err:           #b3402f;
+  --err-soft:      #f8e4e0;
+  --info:          #3f6a99;
+  --info-soft:     #e3ecf6;
 
-  --radius:         12px;
-  --radius-lg:      18px;
-  --shadow:         0 1px 2px rgba(0, 0, 0, .05), 0 6px 18px rgba(0, 0, 0, .04);
+  --radius:        12px;
+  --radius-lg:     18px;
+  --shadow:        0 1px 2px rgba(0, 0, 0, .05), 0 6px 18px rgba(0, 0, 0, .04);
 
-  --sidebar-w:      264px;
-  --topbar-h:       56px;
-
-  /* --- Repoint Material's M3 system tokens at our palette --------------- */
-  --mat-sys-primary:             var(--accent);
-  --mat-sys-on-primary:          var(--on-accent);
-  --mat-sys-primary-container:   var(--accent-soft);
-  --mat-sys-on-primary-container:#5a2a1a;
-  --mat-sys-tertiary:            var(--accent);
-  --mat-sys-on-tertiary:         var(--on-accent);
-  --mat-sys-error:               var(--err);
-  --mat-sys-surface:             var(--surface);
-  --mat-sys-surface-container:   var(--surface);
-  --mat-sys-surface-container-high:   var(--surface-sunken);
-  --mat-sys-surface-container-highest:var(--surface-sunken);
-  --mat-sys-surface-container-low:    var(--bg);
-  --mat-sys-on-surface:          var(--text);
-  --mat-sys-on-surface-variant:  var(--text-muted);
-  --mat-sys-outline:             var(--border);
-  --mat-sys-outline-variant:     var(--border);
-  --mat-sys-background:          var(--bg);
-  --mat-sys-on-background:       var(--text);
+  --sidebar-w:     264px;
+  --topbar-h:      56px;
 }
 
 * { box-sizing: border-box; }
@@ -143,4 +121,6 @@ h1 { font-size: 22px; margin: 0; }
 
 .mat-mdc-dialog-surface { border-radius: var(--radius-lg) !important; }
 
-.mat-mdc-snack-bar-container .mdc-snackbar__surface { border-radius: 10px !important; }
+.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  border-radius: 10px !important;
+}

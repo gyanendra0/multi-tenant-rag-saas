@@ -18,8 +18,22 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/shell/shell.component').then((m) => m.ShellComponent),
     children: [
+      { path: '', pathMatch: 'full', redirectTo: 'documents' },
       {
-        path: '',
+        path: 'documents',
+        loadComponent: () =>
+          import('./features/documents/documents.component').then((m) => m.DocumentsComponent),
+      },
+      {
+        path: 'chat',
+        loadComponent: () => import('./features/chat/chat.component').then((m) => m.ChatComponent),
+      },
+      {
+        path: 'chat/:id',
+        loadComponent: () => import('./features/chat/chat.component').then((m) => m.ChatComponent),
+      },
+      {
+        path: 'home',
         loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
       },
     ],
